@@ -1,0 +1,14 @@
+.git
+.gitignore
+.dockerignore
+.env
+.env.*
+.venv
+venv
+__pycache__
+*.py[cod]
+*.db
+*.sqlite
+*.sqlite3
+.pytest_cache
+tests
