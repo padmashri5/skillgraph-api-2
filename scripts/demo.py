@@ -1,7 +1,7 @@
 """Populate a realistic demo workspace:  python -m scripts.demo   (run once on an empty database)"""
 import random
 from sqlalchemy import func, insert, select
-from app.db import Base, SessionLocal, engine
+from app.db import Base, SessionLocal, engine, sync_postgres_sequences
 from app.models import (Employee, LearningResource, Project, ProjectSkill, Rating, Role, RoleSkillReq, Skill, SkillDemand)
 from app.readiness import recompute_role
 
@@ -59,6 +59,8 @@ with SessionLocal() as s:
     for i, (n, q) in enumerate(projs.items(), 1):
         s.execute(insert(Project), [{"id": i, "name": n, "description": "Demo initiative"}])
         s.execute(insert(ProjectSkill), [{"project_id": i, "skill_id": sid[k], "level": v, "weight": 1.0} for k, v in q.items()])
+    s.commit()
+    sync_postgres_sequences(s, [Skill, Role, Employee, Project])
     s.commit()
 for r in rid.values(): recompute_role(r)
 print("Demo ready: 420 employees, 16 skills, 6 roles (2 critical), 3 projects, 64 courses")
