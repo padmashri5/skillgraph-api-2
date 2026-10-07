@@ -1,7 +1,7 @@
 """Load synthetic data and time the readiness engine:  python -m scripts.seed --employees 1000000 --roles 50"""
 import argparse, random, time
 from sqlalchemy import func, insert, select
-from app.db import Base, SessionLocal, engine
+from app.db import Base, SessionLocal, engine, sync_postgres_sequences
 from app.models import Employee, Rating, Readiness, Role, RoleSkillReq, Skill
 from app.readiness import recompute_role
 
@@ -25,6 +25,8 @@ with SessionLocal() as s:
         s.execute(insert(Rating), [{"employee_id": lo + i + 1, "skill_id": k, "level": random.randint(0, 5), "confidence": 0.6, "source": "seed"}
                   for i in range(n) for k in random.sample(range(1, a.skills + 1), a.ratings)])
         s.commit(); print(f"loaded {lo + n:,} employees", flush=True)
+    sync_postgres_sequences(s, [Skill, Role, Employee])
+    s.commit()
 print(f"data load: {time.time() - t:.0f}s")
 for r in range(1, a.roles + 1):
     t0 = time.time(); recompute_role(r); print(f"role {r}: readiness for all employees in {time.time() - t0:.1f}s", flush=True)
